@@ -1,73 +1,3 @@
-# import streamlit as st
-# from transformers import pipeline
-# from langchain.llms import HuggingFacePipeline
-# from langchain.prompts import PromptTemplate
-# import pandas as pd
-# import plotly.graph_objects as go
-
-# class MultimodalProcessor:
-#     def __init__(self):
-#         """
-#         Initialize multimodal processor with Hugging Face LLM
-#         """
-#         self.llm = self._initialize_llm()
-#         self.vision_model = self._initialize_vision_model()
-
-#     def _initialize_llm(self):
-#         """
-#         Initialize language model (Hugging Face)
-#         """
-#         model_name = "google/flan-t5-large"
-#         pipe = pipeline("text2text-generation", model=model_name, max_length=512)
-#         return HuggingFacePipeline(pipeline=pipe)
-
-#     def _initialize_vision_model(self):
-#         """
-#         Initialize vision-language model
-#         """
-#         try:
-#             vision_model = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
-#             return vision_model
-#         except Exception as e:
-#             st.warning(f"Vision model initialization failed: {e}")
-#             return None
-
-#     def process_text_query(self, document_context, query):
-#         """
-#         Process text-based queries with context
-#         """
-#         prompt_template = PromptTemplate(
-#             input_variables=["context", "query"],
-#             template="Context: {context}\n\nQuestion: {query}\n\nDetailed Answer:"
-#         )
-#         prompt = prompt_template.format(context=document_context, query=query)
-#         return self.llm(prompt)
-
-#     def process_image_query(self, image):
-#         """
-#         Process image-based queries
-#         """
-#         if self.vision_model is None:
-#             st.error("Vision model not available")
-#             return None
-
-#         try:
-#             image_desc = self.vision_model(image)[0]['generated_text']
-#             return image_desc
-#         except Exception as e:
-#             st.error(f"Image processing error: {e}")
-#             return None
-
-#     def generate_code_for_plot(self, query):
-#         """
-#         Generate Plotly graph code for visualization queries
-#         """
-#         prompt = f"Create Python code using Plotly to {query}"
-#         result = self.llm(prompt)
-#         return result
-
-
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -80,7 +10,7 @@ class MultimodalProcessor:
         """
         self.client = Together()
         self.llm_model = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"
-        self.vision_model = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"  # Use the same or appropriate model for vision queries
+        self.vision_model = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"
 
     def _api_call(self, model, messages):
         """
@@ -115,7 +45,7 @@ class MultimodalProcessor:
         Process text-based queries with context
         """
         messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are a chatbot that helps basically answer questions based on the attachments (.doc, .txt, .xlxs, .csv, .pdf, image file). You can also perform math calculations, write codes and answer qurestions."},
             {"role": "user", "content": f"Context: {document_context}\n\nQuestion: {query}\n\nDetailed Answer:"}
         ]
         return self._api_call(self.llm_model, messages)
