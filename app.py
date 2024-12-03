@@ -4,7 +4,8 @@ import pandas as pd
 from PIL import Image
 import re
 import plotly.graph_objects as go
-import plotly_express as px
+import plotly.express as px
+from io import StringIO
 
 MAX_HISTORY_LENGTH = 5  # Limit chat to the last 5 interactions
 
@@ -41,7 +42,15 @@ def main():
             st.subheader(f"Document: {file.name}")
 
             if isinstance(document_content, pd.DataFrame):
+                # Check if document_content is a DataFrame and display it as a DataFrame
                 st.dataframe(document_content)
+                
+                # Convert the DataFrame to a structured string for LLM processing
+                csv_string = StringIO()
+                document_content.to_csv(csv_string, index=False)
+                csv_string.seek(0)
+                structured_text_content = csv_string.getvalue()
+                relevant_document_content = structured_text_content
 
             elif isinstance(document_content, Image.Image):
                 st.image(document_content, caption=f"Uploaded Image: {file.name}")
@@ -52,8 +61,11 @@ def main():
             elif isinstance(document_content, str):
                 st.text(document_content[:500] + "...")  # Preview
 
+                relevant_document_content = document_content
+
             else:
                 st.error("Unsupported file type or content could not be processed.")
+                continue  # Skip further processing for unsupported file types
 
             # Chat-like interaction
             st.subheader("Chat")
@@ -73,18 +85,19 @@ def main():
                 )
 
                 # Focus context: Add the most relevant part of the document and chat history
-                relevant_document_content = document_content if isinstance(document_content, str) else ""
                 context = f"{relevant_document_content[-1000:]}\n\n{history_context}"
 
                 # Check if the query contains any of the plot-related keywords
                 if any(keyword in query.lower() for keyword in PLOT_KEYWORDS):
                     if isinstance(document_content, pd.DataFrame):
-                        # Check if the required column exists in the DataFrame
-                        if 'engagement_rate' in document_content.columns:
+                        # Check if the DataFrame has numeric columns
+                        numeric_columns = document_content.select_dtypes(include=['number']).columns
+
+                        if not numeric_columns.empty:
                             content_summary = (
                                 f"The uploaded document contains a DataFrame with {document_content.shape[0]} rows "
-                                f"and {document_content.shape[1]} columns. Here are the column names: "
-                                f"{', '.join(document_content.columns)}."
+                                f"and {document_content.shape[1]} columns. The numeric columns are: "
+                                f"{', '.join(numeric_columns)}."
                             )
 
                             # Generate the plot code based on the content summary
@@ -113,11 +126,9 @@ def main():
                             else:
                                 st.error("No valid Python code found in the response.")
                         else:
-                            st.error("The column 'engagement_rate' does not exist in the uploaded dataset.")
+                            st.error("The uploaded document does not contain any numeric columns for plotting.")
                     else:
                         st.error("The uploaded file is not a valid CSV or Excel file for generating plots.")
-
-
                 else:
                     response = llm_processor.process_text_query(context, query)
                     st.session_state.chat_history[file_key].append((query, response))

@@ -67,7 +67,9 @@ class MultimodalProcessor:
 
             elif file_extension in ['xlsx', 'csv']:
                 df = pd.read_csv(uploaded_file) if file_extension == 'csv' else pd.read_excel(uploaded_file)
-                return df
+                # Convert the dataframe to a string format with new lines
+                # df_str = df.to_string(index=False)
+                return df  # Returning the structured string of the DataFrame
 
             elif file_extension in ['jpg', 'jpeg', 'png']:
                 return Image.open(io.BytesIO(uploaded_file.getvalue()))
@@ -78,6 +80,7 @@ class MultimodalProcessor:
         except Exception as e:
             st.error(f"Error processing document: {e}")
             return None
+
 
     def process_text_query(self, document_context, query):
         """
