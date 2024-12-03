@@ -68,9 +68,7 @@ class MultimodalProcessor:
 
             elif file_extension in ['xlsx', 'csv']:
                 df = pd.read_csv(uploaded_file) if file_extension == 'csv' else pd.read_excel(uploaded_file)
-                # Convert the dataframe to a string format with new lines
-                # df_str = df.to_string(index=False)
-                return df  # Returning the structured string of the DataFrame
+                return df
 
             elif file_extension in ['jpg', 'jpeg', 'png']:
                 return Image.open(io.BytesIO(uploaded_file.getvalue()))
