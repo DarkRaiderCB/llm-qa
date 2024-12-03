@@ -6,6 +6,7 @@ from PIL import Image
 import io
 import pdfplumber
 import docx
+import base64
 
 class MultimodalProcessor:
     def __init__(self):
@@ -92,13 +93,18 @@ class MultimodalProcessor:
         ]
         return self._api_call(self.llm_model, messages)
 
-    def process_image_query(self, image_description):
+    def process_image_query(self, image):
         """
         Process image-based queries (convert to description before querying)
         """
+        # Convert image to base64 and send it to the model
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
         messages = [
             {"role": "system", "content": "You are a multimodal assistant capable of processing images."},
-            {"role": "user", "content": f"Describe this image: {image_description}"}
+            {"role": "user", "content": f"Provide a description for this image (base64 encoded): {image_base64}"}
         ]
         return self._api_call(self.vision_model, messages)
 
